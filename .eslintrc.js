@@ -11,7 +11,7 @@ module.exports = {
     browser: true,
     es2021: true,
   },
-  ignorePatterns: ["**/*.js", "react-app-env.d.ts"],
+  ignorePatterns: ["**/*.js", "react-app-env.d.ts", "prettier.config.*js"],
   overrides: [
     {
       env: {
