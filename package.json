@@ -39,5 +39,8 @@
   },
   "engines": {
     "node": "16.x"
+  },
+  "devDependencies": {
+    "vercel": "^31.2.2"
   }
 }
