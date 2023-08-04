@@ -1,0 +1,56 @@
+{
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true,
+    "source.fixAll": true
+  },
+  "cSpell.words": [
+    "Aihara",
+    "ianvs",
+    "Kumbh",
+    "mutetoggle",
+    "packagejson",
+    "pomo",
+    "pomodoro",
+    "progressbar",
+    "roboto",
+    "tailwindcss",
+    "Takashi",
+    "timerdisplay",
+    "unfocusable"
+  ],
+  "[TypeScript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "files.associations": {
+    "*.tsx": "typescriptreact",
+    "*.env.development": "env",
+    "*.env.test": "env",
+    "*.env": "env",
+    "*.env.sample": "env",
+    "*.env.example": "env",
+    "*.env.production": "env"
+  },
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true
+  },
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "prettier.enable": true,
+  "prettier.embeddedLanguageFormatting": "auto"
+}
