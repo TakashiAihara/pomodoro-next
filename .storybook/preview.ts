@@ -8,9 +8,20 @@ export const decorators = [withScreenshot];
 
 export const screenshotOptions: { screenshot: ScreenshotOptions } = {
   screenshot: {
-    viewports: ["iPhone 11", "iPad", "1024x768"],
-    delay: 200,
-    fullPage: true,
+    variants: {
+      "iPhone 11": {
+        viewport: "iPhone 11",
+      },
+      iPad: {
+        viewport: "iPad",
+      },
+      "1024x768": {
+        viewport: "1024x768",
+      },
+    },
+    omitBackground: true,
+    delay: 1000,
+    waitAssets: true,
   },
 };
 
