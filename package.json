@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "build": "react-scripts build",
-    "build-storybook": "storybook build",
     "eject": "react-scripts eject",
     "fix": "npm run format && npm run lint:fix",
     "format": "prettier --write 'src/**/*.{ts,tsx}'",
@@ -12,7 +11,13 @@
     "prepare": "husky install",
     "start": "react-scripts start",
     "storybook": "storybook dev -p 6006",
-    "test": "react-scripts test"
+    "storybook-build": "storybook build",
+    "storybook-ci": "storybook dev -p 6006 --ci",
+    "test": "react-scripts test",
+    "vrt:capture": "npx storycap --captureTimeout 1000 --serverCmd 'npm run storybook-ci' http://localhost:6006",
+    "vrt:capture-verbose": "npm run vrt:capture -- --verbose",
+    "vrt:compare": "reg-suit run",
+    "vrt:run": "reg-suit run"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
@@ -79,7 +84,11 @@
     "prettier-plugin-packagejson": "^2.4.5",
     "prettier-plugin-tailwindcss": "^0.4.1",
     "prop-types": "^15.8.1",
+    "reg-keygen-git-hash-plugin": "^0.12.2",
+    "reg-notify-github-plugin": "^0.12.2",
+    "reg-suit": "^0.12.2",
     "storybook": "^7.2.1",
+    "storycap": "^4.2.0",
     "typescript": "^4.9.5",
     "vercel": "^31.2.2",
     "webpack": "^5.88.2"
