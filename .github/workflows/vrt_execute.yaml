@@ -1,0 +1,118 @@
+name: Visual Regression Test Execute
+on:
+  push:
+    branches:
+      - ci/**
+  pull_request:
+    branches-ignore:
+      - ci/**
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  prepare:
+    name: Prepare main branch screenshots
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: checkout latest main branch
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: check commit hash
+        id: commithash
+        run: echo "::set-output name=hash::$(git rev-parse HEAD)"
+
+      - name: restore npm cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: reg-npm-${{ hashFiles('**/package-lock.json') }}-v1
+
+      - name: restore reg-suit screenshots
+        uses: actions/cache@v3
+        with:
+          path: .reg/
+          key: reg-${{ steps.commithash.outputs.hash }}-v7
+
+      - name: Check file existence
+        id: check_files
+        uses: andstor/file-existence-action@v2
+        with:
+          files: ".reg/"
+
+      - name: npm install main branch
+        if: steps.check_files.outputs.files_exists == 'false'
+        run: npm ci
+
+      - name: capture main branch
+        if: steps.check_files.outputs.files_exists == 'false'
+        run: npm run vrt:capture
+
+      - name: run reg-suit main branch
+        if: steps.check_files.outputs.files_exists == 'false'
+        run: npm run vrt:run
+
+      - name: set reg-suit expected
+        if: steps.check_files.outputs.files_exists == 'false'
+        run: |
+          rm -rf .reg/expected/
+          mv -f .reg/actual/ .reg/expected/
+          mkdir .reg/actual/
+          ls -l .reg/
+
+      - name: upload .reg/
+        uses: actions/upload-artifact@v3
+        with:
+          name: reg-expected
+          path: .reg/
+
+  run:
+    name: Run reg-suit
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: workaround for detached HEAD
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          git checkout ${GITHUB_HEAD_REF#refs/heads/} || git checkout -b ${GITHUB_HEAD_REF#refs/heads/} && git pull
+
+      - name: restore npm cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('**/package-lock.json') }}-v1
+
+      - name: npm install
+        run: npm ci
+
+      - name: load reg-suit expecteds
+        uses: actions/download-artifact@v3
+        with:
+          name: reg-expected
+          path: .reg/
+
+      - name: screenshots
+        run: npm run vrt:capture
+
+      - name: run reg-suit
+        run: npm run vrt:run
+
+      - name: upload reg-suit
+        uses: actions/upload-artifact@v3
+        with:
+          name: visual regression test result
+          path: .reg/
