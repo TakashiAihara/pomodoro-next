@@ -16,7 +16,7 @@
     "test": "react-scripts test",
     "vrt:capture": "npx storycap --captureTimeout 1000 --serverCmd 'npm run storybook-ci' http://localhost:6006",
     "vrt:capture-verbose": "npm run vrt:capture -- --verbose",
-    "vrt:compare": "reg-suit run",
+    "vrt:compare": "reg-suit compare",
     "vrt:run": "reg-suit run"
   },
   "lint-staged": {
