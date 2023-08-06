@@ -14,7 +14,7 @@
     "storybook-build": "storybook build",
     "storybook-ci": "storybook dev -p 6006 --ci",
     "test": "react-scripts test",
-    "vrt:capture": "npx storycap --captureTimeout 1000 --serverCmd 'npm run storybook-ci' http://localhost:6006",
+    "vrt:capture": "npx storycap --captureTimeout 3000 -p 8 --serverCmd 'npm run storybook-ci' http://localhost:6006",
     "vrt:capture-verbose": "npm run vrt:capture -- --verbose",
     "vrt:compare": "reg-suit compare",
     "vrt:run": "reg-suit run"
