@@ -55,13 +55,13 @@ jobs:
 
       - name: capture main branch
         if: steps.check_files.outputs.files_exists == 'false'
-        run: npm run vrt:capture
+        run: npm run vrt:capture-ci
 
-      - name: run reg-suit main branch
+      - name: run vrt
         if: steps.check_files.outputs.files_exists == 'false'
         run: npm run vrt:run
 
-      - name: set reg-suit expected
+      - name: move actual -> expected
         if: steps.check_files.outputs.files_exists == 'false'
         run: |
           rm -rf .reg/expected/
@@ -72,7 +72,7 @@ jobs:
       - name: upload .reg/
         uses: actions/upload-artifact@v3
         with:
-          name: reg-expected
+          name: visual regression test expected
           path: .reg/
 
   run:
@@ -110,13 +110,13 @@ jobs:
           name: reg-expected
           path: .reg/
 
-      - name: screenshots
-        run: npm run vrt:capture
+      - name: capture current branch
+        run: npm run vrt:capture-ci
 
-      - name: run reg-suit
+      - name: run vrt
         run: npm run vrt:run
 
-      - name: upload reg-suit
+      - name: upload vrt report
         uses: actions/upload-artifact@v3
         with:
           name: visual regression test result
