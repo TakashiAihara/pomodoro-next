@@ -29,7 +29,7 @@ jobs:
 
       - name: check commit hash
         id: commithash
-        run: echo "::set-output name=hash::$(git rev-parse HEAD)"
+        run: echo "COMMIT_HASH=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
       - name: restore npm cache
         uses: actions/cache@v3
@@ -41,7 +41,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: .reg/
-          key: reg-${{ steps.commithash.outputs.hash }}-v7
+          key: reg-${{ env.COMMIT_HASH }}-v7
 
       - name: Check file existence
         id: check_files
