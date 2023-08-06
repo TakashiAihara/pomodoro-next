@@ -1,0 +1,21 @@
+{
+  "core": {
+    "workingDir": ".reg",
+    "actualDir": "./test/vrt/actual",
+    "thresholdRate": 0,
+    "addIgnore": true,
+    "ximgdiff": {
+      "invocationType": "client"
+    }
+  },
+  "plugins": {
+    "reg-keygen-git-hash-plugin": true,
+    "reg-notify-github-plugin": {
+      "clientId": "MzM3MTG1NDO30C/Iz81PyS/K181LrSjRNzEwtjQ1NLDUD0nMTizOyHTMzEgsSgQA",
+      "prComment": true,
+      "prCommentBehavior": "default",
+      "setCommitStatus": true,
+      "shortDescription": true
+    }
+  }
+}
