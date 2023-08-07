@@ -107,7 +107,7 @@ jobs:
       - name: load reg-suit expecteds
         uses: actions/download-artifact@v3
         with:
-          name: reg-expected
+          name: visual regression test expected
           path: .reg/
 
       - name: capture current branch
