@@ -55,7 +55,7 @@ jobs:
 
       - name: capture main branch
         if: steps.check_files.outputs.files_exists == 'false'
-        run: npm run vrt:capture-ci
+        run: npm run vrt:capture
 
       - name: run vrt
         if: steps.check_files.outputs.files_exists == 'false'
@@ -111,7 +111,7 @@ jobs:
           path: .reg/
 
       - name: capture current branch
-        run: npm run vrt:capture-ci
+        run: npm run vrt:capture
 
       - name: run vrt
         run: npm run vrt:run
