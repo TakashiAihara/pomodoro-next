@@ -145,6 +145,7 @@ jobs:
 
       - name: PR comment with link to report
         uses: thollander/actions-comment-pull-request@v2
+        if: github.event_name != 'push'
         with:
           message: |
             https://${{ env.CNAME }}/${{ env.GH_PAGES_VRT_REPORT_PATH }}
