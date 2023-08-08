@@ -133,3 +133,14 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .reg
           destination_dir: ${{ env.CI_GH_PAGES_VRT_REPORT_PATH }}
+
+      - name: Get GitHub Pages Custom Domain
+        run: |
+          echo "CNAME=$(cat CNAME)" >> $GITHUB_ENV
+
+      - name: PR comment with link to report
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            /${{ env.GITHUB_ENV }}/${{ env.CI_GH_PAGES_VRT_REPORT_PATH }}
+          reactions: eyes
