@@ -1,0 +1,27 @@
+name: PR Comment Test
+on:
+  push:
+    branches:
+      - ci/**
+  pull_request:
+    branches-ignore:
+      - ci/**
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  run:
+    name: Run reg-suit
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR comment with link to report
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: test
+          mode: delete
