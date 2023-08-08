@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   prepare:
@@ -140,7 +141,10 @@ jobs:
 
       - name: PR comment with link to report
         uses: thollander/actions-comment-pull-request@v2
+        env:
+          PR_NUMBER: ${{ github.event.number }}
         with:
           message: |
-            /${{ env.GITHUB_ENV }}/${{ env.CI_GH_PAGES_VRT_REPORT_PATH }}
+            https://${{ env.CNAME }}/${{ env.CI_GH_PAGES_VRT_REPORT_PATH }}
           reactions: eyes
+          mode: delete
