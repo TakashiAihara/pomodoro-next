@@ -28,7 +28,7 @@ jobs:
       - name: setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: $NODE_VERSION
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: checkout latest main branch
         uses: actions/checkout@v3
@@ -93,7 +93,7 @@ jobs:
       - name: setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: $NODE_VERSION
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: checkout
         uses: actions/checkout@v3
@@ -137,7 +137,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .reg
-          destination_dir: $GH_PAGES_VRT_REPORT_PATH
+          destination_dir: ${{ env.GH_PAGES_VRT_REPORT_PATH }}
 
       - name: Get GitHub Pages Custom Domain
         run: |
@@ -149,6 +149,6 @@ jobs:
           PR_NUMBER: ${{ github.event.number }}
         with:
           message: |
-            https://${{ env.CNAME }}/$GH_PAGES_VRT_REPORT_PATH
+            https://${{ env.CNAME }}/${{ env.GH_PAGES_VRT_REPORT_PATH }}
           reactions: eyes
           mode: delete
