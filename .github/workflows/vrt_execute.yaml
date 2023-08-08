@@ -11,15 +11,24 @@ on:
       - synchronize
       - reopened
 
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  NODE_VERSION: ${{ vars.CI_NODE_VERSION }}
+  GH_PAGES_VRT_REPORT_PATH: ${{ vars.CI_GH_PAGES_VRT_REPORT_PATH }}
+
 jobs:
   prepare:
     name: Prepare main branch screenshots
     runs-on: ubuntu-latest
+    environment: Test
     steps:
       - name: setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: checkout latest main branch
         uses: actions/checkout@v3
@@ -40,14 +49,14 @@ jobs:
       - name: restore reg-suit screenshots
         uses: actions/cache@v3
         with:
-          path: .reg/
+          path: .reg
           key: reg-${{ env.COMMIT_HASH }}-v7
 
       - name: Check file existence
         id: check_files
         uses: andstor/file-existence-action@v2
         with:
-          files: ".reg/"
+          files: .reg
 
       - name: npm install main branch
         if: steps.check_files.outputs.files_exists == 'false'
@@ -69,21 +78,22 @@ jobs:
           mkdir .reg/actual/
           ls -l .reg/
 
-      - name: upload .reg/
+      - name: upload .reg
         uses: actions/upload-artifact@v3
         with:
           name: visual regression test expected
-          path: .reg/
+          path: .reg
 
   run:
     name: Run reg-suit
     needs: prepare
     runs-on: ubuntu-latest
+    environment: Test
     steps:
       - name: setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: checkout
         uses: actions/checkout@v3
@@ -107,8 +117,8 @@ jobs:
       - name: load reg-suit expecteds
         uses: actions/download-artifact@v3
         with:
-          name: reg-expected
-          path: .reg/
+          name: visual regression test expected
+          path: .reg
 
       - name: capture current branch
         run: npm run vrt:capture
@@ -120,4 +130,23 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: visual regression test result
-          path: .reg/
+          path: .reg
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .reg
+          destination_dir: ${{ env.GH_PAGES_VRT_REPORT_PATH }}
+
+      - name: Get GitHub Pages Custom Domain
+        run: |
+          echo "CNAME=$(cat CNAME)" >> $GITHUB_ENV
+
+      - name: PR comment with link to report
+        uses: thollander/actions-comment-pull-request@v2
+        if: github.event_name != 'push'
+        with:
+          message: |
+            https://${{ env.CNAME }}/${{ env.GH_PAGES_VRT_REPORT_PATH }}
+          mode: delete
