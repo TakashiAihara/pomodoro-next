@@ -1,0 +1,45 @@
+name: Visual Regression Test Execute
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  storybook_deploy:
+    name: Build and Deploy Storybook into gh-pages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.x"
+
+      - name: checkout latest main branch
+        uses: actions/checkout@v3
+
+      - name: npm install
+        run: npm ci
+
+      - name: Build Storybook
+        run: npm run storybook-build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          name: visual regression test expected
+          path: ./storybook-static
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./storybook-static
+          destination_dir: ./storybook
