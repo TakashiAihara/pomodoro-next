@@ -11,6 +11,11 @@ concurrency:
 permissions:
   contents: write
 
+env:
+  NODE_VERSION: ${{ vars.CI_NODE_VERSION }}
+  GH_PAGES_STORYBOOK_PATH: ${{ vars.CI_GH_PAGES_STORYBOOK_PATH }}
+  STORYBOOK_BUILD_PATH: storybook-static
+
 jobs:
   storybook_deploy:
     name: Build and Deploy Storybook into gh-pages
@@ -20,7 +25,7 @@ jobs:
       - name: setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: ${{ env.NODE_VERSION }}}
 
       - name: checkout latest main branch
         uses: actions/checkout@v3
@@ -35,11 +40,11 @@ jobs:
         uses: actions/upload-pages-artifact@v2
         with:
           name: visual regression test expected
-          path: ./storybook-static
+          path: ${{ env.STORYBOOK_BUILD_PATH }}
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./storybook-static
-          destination_dir: ./storybook
+          publish_dir: ${{ env.STORYBOOK_BUILD_PATH }}
+          destination_dir: ${{ env.GH_PAGES_STORYBOOK_PATH }}
