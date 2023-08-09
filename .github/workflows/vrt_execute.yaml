@@ -17,15 +17,17 @@ permissions:
   id-token: write
 
 env:
-  NODE_VERSION: ${{ vars.CI_NODE_VERSION }} # e.g. 16.x
-  GH_PAGES_VRT_REPORT_PATH: ${{ vars.CI_GH_PAGES_VRT_REPORT_PATH }} # e.g. vrt-report
+  NODE_VERSION: 16.x
   VRT_REPORT_PATH: .reg
+  TEMP_DIR: tmp
+  STORYBOOK_DOCS_BRANCH: docs/storybook
+  GH_PAGES_VRT_REPORT_SUBDIR: vrt-report
+  GH_PAGES_STORYBOOK_SUBDIR: storybook
 
 jobs:
   prepare:
     name: Prepare main branch screenshots
     runs-on: ubuntu-latest
-    environment: Test
     steps:
       - name: setup Node.js
         uses: actions/setup-node@v3
@@ -90,7 +92,6 @@ jobs:
     name: Run reg-suit
     needs: prepare
     runs-on: ubuntu-latest
-    environment: Test
     steps:
       - name: setup Node.js
         uses: actions/setup-node@v3
@@ -128,22 +129,33 @@ jobs:
       - name: run vrt
         run: npm run vrt:run
 
-      - name: upload vrt report
-        uses: actions/upload-artifact@v3
-        with:
-          name: VRT Report ( by upload-artifact )
-          path: ${{ env.VRT_REPORT_PATH }}
-
       - uses: actions/upload-pages-artifact@v2
         name: Upload Pages Artifact
         with:
           name: VRT Report
           path: ${{ env.VRT_REPORT_PATH }}
 
+      - name: create dir for gh-pages
+        run: |
+          mkdir -p ${TEMP_DIR}
+          mv ${VRT_REPORT_PATH} ${TEMP_DIR}/${GH_PAGES_VRT_REPORT_SUBDIR}
+
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.STORYBOOK_DOCS_BRANCH }}
+          path: ${{ env.TEMP_DIR }}/${{ env.GH_PAGES_STORYBOOK_SUBDIR}}
+
+      - uses: actions/upload-pages-artifact@v2
+        name: Upload Pages Artifact
+        with:
+          name: Github Pages
+          path: ${{ env.TEMP_DIR }}
+
       - uses: actions/deploy-pages@v2
         id: deployment
         with:
-          artifact_name: VRT Report
+          artifact_name: Github Pages
 
       - name: Get GitHub Pages Custom Domain
         run: |
@@ -154,5 +166,6 @@ jobs:
         if: github.event_name != 'push'
         with:
           message: |
-            https://${{ env.CNAME }}/${{ env.GH_PAGES_VRT_REPORT_PATH }}
+            VRT Report is available at
+            https://${{ env.CNAME }}/${{ env.GH_PAGES_VRT_REPORT_SUBDIR }}
           mode: delete
