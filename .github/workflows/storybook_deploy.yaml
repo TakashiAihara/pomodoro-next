@@ -1,7 +1,7 @@
-name: Visual Regression Test Execute
+name: Build and Deploy Storybook
 on:
   push:
-    branches: ["main"]
+    - main
   workflow_dispatch:
 
 concurrency:
@@ -10,6 +10,15 @@ concurrency:
 
 permissions:
   contents: write
+  id-token: write
+  pages: write
+
+env:
+  NODE_VERSION: 16.x
+  STORYBOOK_BUILD_PATH: storybook-static
+  STORYBOOK_DOCS_BRANCH: docs/storybook
+  TEMP_DIR: tmp
+  GH_PAGES_SUBDIR: storybook
 
 jobs:
   storybook_deploy:
@@ -20,7 +29,7 @@ jobs:
       - name: setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: checkout latest main branch
         uses: actions/checkout@v3
@@ -31,15 +40,31 @@ jobs:
       - name: Build Storybook
         run: npm run storybook-build
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+      - uses: actions/upload-pages-artifact@v2
+        name: Upload Pages Artifact
         with:
-          name: visual regression test expected
-          path: ./storybook-static
+          name: Storybook
+          path: ${{ env.STORYBOOK_BUILD_PATH }}
 
-      - name: Deploy to gh-pages
+      - name: Deploy to ${{ env.STORYBOOK_DOCS_BRANCH }}
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./storybook-static
-          destination_dir: ./storybook
+          publish_dir: ${{ env.STORYBOOK_BUILD_PATH }}
+          publish_branch: ${{ env.STORYBOOK_DOCS_BRANCH }}
+
+      - name: create dir for gh-pages
+        run: |
+          mkdir -p ${TEMP_DIR}
+          mv ${STORYBOOK_BUILD_PATH} ${TEMP_DIR}/${GH_PAGES_SUBDIR}
+
+      - uses: actions/upload-pages-artifact@v2
+        name: Upload Pages Artifact
+        with:
+          name: Github Pages
+          path: ${{ env.TEMP_DIR }}
+
+      - uses: actions/deploy-pages@v2
+        id: deployment
+        with:
+          artifact_name: Github Pages
