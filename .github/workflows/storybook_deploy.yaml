@@ -11,8 +11,7 @@ permissions:
   contents: write
 
 env:
-  NODE_VERSION: ${{ vars.CI_NODE_VERSION }}
-  GH_PAGES_STORYBOOK_PATH: ${{ vars.CI_GH_PAGES_STORYBOOK_PATH }}
+  NODE_VERSION: 16.x
   STORYBOOK_BUILD_PATH: storybook-static
   STORYBOOK_DOCS_BRANCH: docs/storybook
   TEMP_DIR: tmp
@@ -27,7 +26,7 @@ jobs:
       - name: setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ env.NODE_VERSION }}}
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: checkout latest main branch
         uses: actions/checkout@v3
