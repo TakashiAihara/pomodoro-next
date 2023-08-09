@@ -1,4 +1,4 @@
-name: Visual Regression Test Execute
+name: Build and Deploy Storybook
 on:
   push:
     branches: ["main"]
