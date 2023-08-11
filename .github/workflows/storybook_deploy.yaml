@@ -1,7 +1,8 @@
 name: Build and Deploy Storybook
 on:
   push:
-    - main
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
@@ -18,7 +19,7 @@ env:
   STORYBOOK_BUILD_PATH: storybook-static
   STORYBOOK_DOCS_BRANCH: docs/storybook
   TEMP_DIR: tmp
-  GH_PAGES_SUBDIR: storybook
+  GH_PAGES_STORYBOOK_SUBDIR: storybook
 
 jobs:
   storybook_deploy:
@@ -56,7 +57,7 @@ jobs:
       - name: create dir for gh-pages
         run: |
           mkdir -p ${TEMP_DIR}
-          mv ${STORYBOOK_BUILD_PATH} ${TEMP_DIR}/${GH_PAGES_SUBDIR}
+          mv ${STORYBOOK_BUILD_PATH} ${TEMP_DIR}/${GH_PAGES_STORYBOOK_SUBDIR}
 
       - uses: actions/upload-pages-artifact@v2
         name: Upload Pages Artifact
