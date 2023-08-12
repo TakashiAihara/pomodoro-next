@@ -44,8 +44,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: workaround for detached HEAD
-        if: ${{ github.event_name == 'pull_request' }}
+      - if: ${{ github.event_name == 'pull_request' }}
+        name: workaround for detached HEAD
         run: |
           git checkout ${GITHUB_HEAD_REF#refs/heads/} || git checkout -b ${GITHUB_HEAD_REF#refs/heads/} && git pull
 
@@ -84,13 +84,15 @@ jobs:
       - name: run vrt
         run: npm run vrt:run
 
-      - uses: actions/upload-artifact@v3
+      - if: always()
+        uses: actions/upload-artifact@v3
         name: upload pages artifact
         with:
           name: ${{ env.VRT_REPORT_ARTIFACT }}
           path: ${{ env.TEST_REPORTS_PATH }}/${{ env.VRT_REPORT_PATH }}
 
-      - name: cache VRT report
+      - if: always()
+        name: cache VRT report
         uses: actions/cache@v3
         id: cache-vrt-report
         with:
@@ -111,8 +113,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: workaround for detached HEAD
-        if: ${{ github.event_name == 'pull_request' }}
+      - if: ${{ github.event_name == 'pull_request' }}
+        name: workaround for detached HEAD
         run: |
           git checkout ${GITHUB_HEAD_REF#refs/heads/} || git checkout -b ${GITHUB_HEAD_REF#refs/heads/} && git pull
 
