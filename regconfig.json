@@ -1,6 +1,6 @@
 {
   "core": {
-    "workingDir": ".reg",
+    "workingDir": "test-results/vrt",
     "actualDir": "__screenshots__",
     "thresholdRate": 0,
     "addIgnore": true,
