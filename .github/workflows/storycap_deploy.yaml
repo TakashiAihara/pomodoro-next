@@ -1,0 +1,42 @@
+name: Generate and Deploy latest storycap
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  NODE_VERSION: 16.x
+  STORYCAP_PATH: __screenshots__
+  STORYCAP_DOCS_BRANCH: docs/storycap
+
+jobs:
+  storybook_deploy:
+    name: Generate and Deploy latest storycap
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: checkout latest main branch
+        uses: actions/checkout@v3
+
+      - name: npm install
+        run: npm ci
+
+      - name: Build Storybook
+        run: npm run vrt:capture
+
+      - name: Deploy to ${{ env.STORYCAP_DOCS_BRANCH }}
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ${{ env.STORYCAP_PATH }}
+          publish_branch: ${{ env.STORYCAP_DOCS_BRANCH }}
