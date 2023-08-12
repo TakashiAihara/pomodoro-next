@@ -21,7 +21,7 @@
 .pnp.js
 
 # testing
-/coverage
+/test-results
 
 # production
 /build
@@ -45,6 +45,5 @@ yarn-error.log*
 .vercel
 
 ## VRT
-
 .reg
 __screenshots__
