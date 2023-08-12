@@ -49,32 +49,32 @@ jobs:
           path: ${{ env.TEST_REPORTS_PATH }}/${{ env.VRT_REPORT_PATH }}
           key: vrt-${{ env.COMMIT_HASH }}-v1
 
-      - if: steps.check_main_cache_exists.outputs.cache-hit == 'false'
+      - if: steps.check_main_cache_exists.outputs.cache-hit == false
         name: setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - if: steps.check_main_cache_exists.outputs.cache-hit == 'false'
+      - if: steps.check_main_cache_exists.outputs.cache-hit == false
         name: restore npm cache with package-lock hash
         uses: actions/cache@v3
         with:
           path: ~/.npm
           key: npm-${{ hashFiles('**/package-lock.json') }}
 
-      - if: steps.check_main_cache_exists.outputs.cache-hit == 'false'
+      - if: steps.check_main_cache_exists.outputs.cache-hit == false
         name: npm install
         run: npm ci
 
-      - if: steps.check_main_cache_exists.outputs.cache-hit == 'false'
+      - if: steps.check_main_cache_exists.outputs.cache-hit == false
         name: capture
         run: npm run vrt:capture
 
-      - if: steps.check_main_cache_exists.outputs.cache-hit == 'false'
+      - if: steps.check_main_cache_exists.outputs.cache-hit == false
         name: run vrt
         run: npm run vrt:run
 
-      - if: steps.check_main_cache_exists.outputs.cache-hit == 'false'
+      - if: steps.check_main_cache_exists.outputs.cache-hit == false
         name: move actual -> expected
         run: |
           rm -rf ${TEST_REPORTS_PATH}/${VRT_REPORT_PATH}/expected
