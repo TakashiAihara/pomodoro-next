@@ -1,4 +1,4 @@
-name: Build and Deploy Storybook
+name: Generate and Deploy latest storycap
 on:
   push:
     branches:
