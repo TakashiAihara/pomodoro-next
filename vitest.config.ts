@@ -12,8 +12,12 @@ export default defineConfig({
     exclude: ["node_modules", "dist", ".idea", ".git", ".cache"],
     coverage: {
       provider: "v8",
-      reporter: ["text", "json", "html"],
+      reporter: ["text", "json", "json-summary", "html", "lcov", "clover"],
       reportsDirectory: "./test-results/unit",
+      lines: 60,
+      branches: 60,
+      functions: 60,
+      statements: 60,
     },
   },
   esbuild: {

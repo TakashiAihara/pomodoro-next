@@ -128,13 +128,21 @@ jobs:
       - name: execute unit test with coverage
         run: npm run ut:coverage
 
-      - uses: actions/upload-artifact@v3
+      - if: always()
+        name: report coverage into PR
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          file-coverage-mode: all
+
+      - if: always()
+        uses: actions/upload-artifact@v3
         name: upload pages artifact
         with:
           name: ${{ env.UNIT_TEST_ARTIFACT }}
           path: ${{ env.TEST_REPORTS_PATH }}/${{ env.UNIT_TEST_PATH }}
 
-      - name: cache unit test report
+      - if: always()
+        name: cache unit test report
         uses: actions/cache@v3
         id: cache-unit-test-report
         with:
