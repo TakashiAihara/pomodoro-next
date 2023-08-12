@@ -135,6 +135,8 @@ jobs:
         uses: davelosert/vitest-coverage-report-action@v2
         with:
           file-coverage-mode: all
+          json-final-path: ${{ env.TEST_REPORTS_PATH }}/${{ env.UNIT_TEST_PATH }}/coverage-final.json
+          json-summary-path: ${{ env.TEST_REPORTS_PATH }}/${{ env.UNIT_TEST_PATH }}/coverage-summary.json
 
       - if: always()
         uses: actions/upload-artifact@v3
