@@ -16,7 +16,7 @@ env:
 
 jobs:
   storybook_deploy:
-    name: Build and Deploy Storybook into gh-pages
+    name: Generate and Deploy latest storycap
     runs-on: ubuntu-latest
 
     steps:
