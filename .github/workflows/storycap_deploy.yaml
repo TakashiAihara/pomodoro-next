@@ -1,8 +1,6 @@
 name: Generate and Deploy latest storycap
 on:
   push:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
