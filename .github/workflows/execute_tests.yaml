@@ -1,0 +1,261 @@
+name: Execute Tests (VRT/Unit)
+on:
+  push:
+    branches:
+      - ci/**
+  pull_request:
+    branches-ignore:
+      - ci/**
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  pull-requests: write
+  pages: write
+  id-token: write
+
+env:
+  NODE_VERSION: 16.x
+  TEST_REPORTS_PATH: test-results
+  VRT_REPORT_PATH: vrt
+  VRT_REPORT_ARTIFACT: VRT Results
+  VRT_REPORT_ARTIFACT_MAIN: VRT Resources From Main
+  UNIT_TEST_PATH: unit
+  UNIT_TEST_ARTIFACT: Unit Test Results
+  GITHUB_PAGES_ARTIFACT: Github Pages
+  STORYBOOK_DOCS_BRANCH: docs/storybook
+  STORYBOOK_SUBDIR: storybook
+
+jobs:
+  vrt-prepare:
+    name: Prepare main branch screenshots for VRT
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout main branch
+        uses: actions/checkout@v3
+        with:
+          ref: main
+
+      - name: check main branch commit hash
+        id: commithash
+        run: echo "COMMIT_HASH=$(git rev-parse HEAD)" >> $GITHUB_ENV
+
+      - name: check vrt cache and download
+        id: check_main_cache_exists
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.VRT_REPORT_PATH }}
+          key: vrt-${{ env.COMMIT_HASH }}
+
+      - if: steps.check_main_cache_exists.outputs.cache-hit == 'false'
+        name: setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - if: steps.check_main_cache_exists.outputs.cache-hit == 'false'
+        name: restore npm cache with package-lock hash
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+
+      - if: steps.check_main_cache_exists.outputs.cache-hit == 'false'
+        name: npm install
+        run: npm ci
+
+      - if: steps.check_main_cache_exists.outputs.cache-hit == 'false'
+        name: capture
+        run: npm run vrt:capture
+
+      - if: steps.check_main_cache_exists.outputs.cache-hit == 'false'
+        name: run vrt
+        run: npm run vrt:run
+
+      - if: steps.check_main_cache_exists.outputs.cache-hit == 'false'
+        name: move actual -> expected
+        run: |
+          rm -rf ${TEST_REPORTS_PATH}/${VRT_REPORT_PATH}/expected
+          mv -f ${TEST_REPORTS_PATH}/${VRT_REPORT_PATH}/actual ${TEST_REPORTS_PATH}/${VRT_REPORT_PATH}/expected
+          mkdir ${TEST_REPORTS_PATH}/${VRT_REPORT_PATH}/actual
+          ls -l ${TEST_REPORTS_PATH}/${VRT_REPORT_PATH}
+
+      - name: upload ${{ env.TEST_REPORTS_PATH }}/${{ env.VRT_REPORT_PATH }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.VRT_REPORT_ARTIFACT_MAIN }}
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.VRT_REPORT_PATH }}
+
+  vrt-execute:
+    name: Execute VRT
+    needs: vrt-prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: checkout current branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: workaround for detached HEAD
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          git checkout ${GITHUB_HEAD_REF#refs/heads/} || git checkout -b ${GITHUB_HEAD_REF#refs/heads/} && git pull
+
+      - name: restore npm cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+
+      - name: npm install
+        run: npm ci
+
+      - name: retrieve VRT resources acquired in main
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.VRT_REPORT_ARTIFACT_MAIN }}
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.VRT_REPORT_PATH }}
+
+      - name: capture current branch
+        run: npm run vrt:capture
+
+      - name: run vrt
+        run: npm run vrt:run
+
+      - uses: actions/upload-artifact@v3
+        name: upload pages artifact
+        with:
+          name: ${{ env.VRT_REPORT_ARTIFACT }}
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.VRT_REPORT_PATH }}
+
+      - name: cache VRT report
+        uses: actions/cache@v3
+        id: cache-vrt-report
+        with:
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.VRT_REPORT_PATH }}
+          key: vrt-${{ runner.os }}-${{ github.run_id }}
+
+  unit-test-execute:
+    name: Execute Unit Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: checkout current branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: workaround for detached HEAD
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          git checkout ${GITHUB_HEAD_REF#refs/heads/} || git checkout -b ${GITHUB_HEAD_REF#refs/heads/} && git pull
+
+      - name: restore npm cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+
+      - name: npm install
+        run: npm ci
+
+      - name: execute unit test with coverage
+        run: npm run ut:coverage
+
+      - uses: actions/upload-artifact@v3
+        name: upload pages artifact
+        with:
+          name: ${{ env.UNIT_TEST_ARTIFACT }}
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.UNIT_TEST_PATH }}
+
+      - name: cache unit test report
+        uses: actions/cache@v3
+        id: cache-unit-test-report
+        with:
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.UNIT_TEST_PATH }}
+          key: vrt-${{ runner.os }}-${{ github.run_id }}
+
+  deploy-github-pages:
+    name: Summarize Deliverables and Deploy Github Pages
+    runs-on: ubuntu-latest
+    needs:
+      - vrt-execute
+      - unit-test-execute
+    if: >
+      always() &&
+      (
+        needs.vrt-execute.result == 'success' ||
+        needs.unit-test-execute.result == 'success'
+      )
+
+    steps:
+      - name: load VRT report cache
+        uses: actions/cache@v3
+        id: load-cache-vrt-report
+        with:
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.VRT_REPORT_PATH }}
+          key: vrt-${{ runner.os }}-${{ github.run_id }}
+
+      - name: load unit test report cache
+        uses: actions/cache@v3
+        id: load-cache-unit-test-report
+        with:
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.UNIT_TEST_PATH }}
+          key: vrt-${{ runner.os }}-${{ github.run_id }}
+
+      - name: checkout ${{ env.STORYBOOK_DOCS_BRANCH }} for deploy with ${{ env.TEST_REPORTS_PATH }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.STORYBOOK_DOCS_BRANCH }}
+          path: ${{ env.STORYBOOK_SUBDIR }}
+
+      - uses: actions/upload-pages-artifact@v2
+        name: upload pages artifact
+        with:
+          name: ${{ env.GITHUB_PAGES_ARTIFACT }}
+          path: .
+
+      - uses: actions/deploy-pages@v2
+        id: deployment
+        with:
+          artifact_name: ${{ env.GITHUB_PAGES_ARTIFACT }}
+
+      - name: get gitHub pages custom domain
+        run: |
+          echo "CNAME=$(cat CNAME)" >> $GITHUB_ENV
+
+      - if: >
+          github.event_name != 'push' &&
+          steps.load-cache-vrt-report.outputs.cache-hit == 'true'
+        name: PR comment with VRT result link
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            VRT Report is available at
+            https://${{ env.CNAME }}/${{ env.TEST_REPORTS_PATH }}/${{ env.VRT_REPORT_PATH }}
+            Please check it if failed!!
+          mode: delete
+          reactions: eyes
+
+      - if: >
+          github.event_name != 'push' &&
+          steps.load-cache-unit-test-report.outputs.cache-hit == 'true'
+        name: PR comment with unit test result link
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            Unit Test Report is available at
+            https://${{ env.CNAME }}/${{ env.TEST_REPORTS_PATH }}/${{ env.UNIT_TEST_PATH }}
+          mode: delete
+          reactions: eyes
