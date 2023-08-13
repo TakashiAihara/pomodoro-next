@@ -25,7 +25,7 @@ export default defineConfig({
   },
   esbuild: {
     loader: "jsx",
-    include: /src\/.*\.jsx?$/,
+    include: /src\/.*\.[tj]sx?$/,
     exclude: [],
   },
   resolve: {
@@ -33,4 +33,5 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  root: path.resolve(__dirname, "."),
 });
