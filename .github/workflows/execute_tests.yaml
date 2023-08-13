@@ -198,6 +198,12 @@ jobs:
         with:
           artifact_name: ${{ env.GITHUB_PAGES_ARTIFACT }}
 
+      - name: checkout CNAME
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          clean: true
+
       - name: get gitHub pages custom domain
         run: |
           echo "CNAME=$(cat CNAME)" >> $GITHUB_ENV
@@ -211,9 +217,8 @@ jobs:
           message: |
             VRT Report is available at
             https://${{ env.CNAME }}/${{ env.TEST_REPORTS_PATH }}/${{ env.VRT_REPORT_PATH }}
-            Please check it if failed!!
+            Please check it if failed!! 😁
           mode: delete
-          reactions: eyes
 
       - if: >
           github.event_name != 'push' &&
@@ -225,4 +230,3 @@ jobs:
             Unit Test Report is available at
             https://${{ env.CNAME }}/${{ env.TEST_REPORTS_PATH }}/${{ env.UNIT_TEST_PATH }}
           mode: delete
-          reactions: eyes
