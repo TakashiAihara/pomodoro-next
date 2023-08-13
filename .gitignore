@@ -47,3 +47,6 @@ yarn-error.log*
 ## VRT
 .reg
 __screenshots__
+
+## unplugin-auto-import
+auto-imports.d.ts
