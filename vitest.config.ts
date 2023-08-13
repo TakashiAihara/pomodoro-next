@@ -1,9 +1,16 @@
 import path from "path";
 import react from "@vitejs/plugin-react";
+import AutoImport from "unplugin-auto-import/vite";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    AutoImport({
+      imports: ["vitest"],
+      dts: "./src/auto-imports.d.ts",
+    }),
+  ],
   test: {
     globals: true,
     environment: "happy-dom",
