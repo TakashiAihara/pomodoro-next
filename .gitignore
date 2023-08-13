@@ -45,7 +45,6 @@ yarn-error.log*
 .vercel
 
 ## VRT
-.reg
 __screenshots__
 
 ## unplugin-auto-import
