@@ -1,4 +1,4 @@
-name: Generate and Deploy latest storycap
+name: storycap - Generate and Deploy
 on:
   push:
     branches:
