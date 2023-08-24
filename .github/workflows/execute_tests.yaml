@@ -18,6 +18,7 @@ permissions:
 
 env:
   NODE_VERSION: 18.x
+  PNPM_VERSION: 8
   TEST_REPORTS_PATH: test-results
   VRT_REPORT_PATH: vrt
   VRT_REPORT_ARTIFACT: VRT Results
@@ -34,11 +35,6 @@ jobs:
     name: Execute VRT
     runs-on: ubuntu-latest
     steps:
-      - name: setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
       - name: checkout current branch
         uses: actions/checkout@v3
         with:
@@ -49,14 +45,32 @@ jobs:
         run: |
           git checkout ${GITHUB_HEAD_REF#refs/heads/} || git checkout -b ${GITHUB_HEAD_REF#refs/heads/} && git pull
 
-      - name: restore npm cache
-        uses: actions/cache@v3
+      - name: setup Node.js
+        uses: actions/setup-node@v3
         with:
-          path: ~/.npm
-          key: npm-${{ hashFiles('**/package-lock.json') }}
+          node-version: ${{ env.NODE_VERSION }}
 
-      - name: npm install
-        run: npm ci
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm i --frozen-lockfile
 
       - name: checkout latest storycap from ${{ env.STORYCAP_DOCS_BRANCH }}
         id: checkout_latest_storycap
@@ -79,10 +93,10 @@ jobs:
         run: exit 1
 
       - name: capture current branch
-        run: npm run vrt:capture
+        run: pnpm vrt:capture
 
       - name: run vrt
-        run: npm run vrt:run
+        run: pnpm vrt:run
 
       - if: always()
         uses: actions/upload-artifact@v3
@@ -103,11 +117,6 @@ jobs:
     name: Execute Unit Test
     runs-on: ubuntu-latest
     steps:
-      - name: setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
       - name: checkout current branch
         uses: actions/checkout@v3
         with:
@@ -118,17 +127,35 @@ jobs:
         run: |
           git checkout ${GITHUB_HEAD_REF#refs/heads/} || git checkout -b ${GITHUB_HEAD_REF#refs/heads/} && git pull
 
-      - name: restore npm cache
-        uses: actions/cache@v3
+      - name: setup Node.js
+        uses: actions/setup-node@v3
         with:
-          path: ~/.npm
-          key: npm-${{ hashFiles('**/package-lock.json') }}
+          node-version: ${{ env.NODE_VERSION }}
 
-      - name: npm install
-        run: npm ci
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm i --frozen-lockfile
 
       - name: execute unit test with coverage
-        run: npm run ut:coverage
+        run: pnpm ut:coverage
 
       - if: always()
         name: report coverage into PR

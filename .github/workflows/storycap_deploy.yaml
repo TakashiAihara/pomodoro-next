@@ -11,6 +11,7 @@ permissions:
 
 env:
   NODE_VERSION: 18.x
+  PNPM_VERSION: 8
   STORYCAP_PATH: __screenshots__
   STORYCAP_DOCS_BRANCH: docs/storycap
 
@@ -20,19 +21,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: checkout latest main branch
+      - name: checkout current branch
         uses: actions/checkout@v3
 
-      - name: npm install
-        run: npm ci
+      - name: setup Node.js
+        uses: actions/setup-node@v3
+
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm i --frozen-lockfile
 
       - name: Build Storybook
-        run: npm run vrt:capture
+        run: pnpm vrt:capture
 
       - name: Deploy to ${{ env.STORYCAP_DOCS_BRANCH }}
         uses: peaceiris/actions-gh-pages@v3
