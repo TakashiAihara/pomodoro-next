@@ -17,7 +17,7 @@ permissions:
   id-token: write
 
 env:
-  NODE_VERSION: 16.x
+  NODE_VERSION: 18.x
   TEST_REPORTS_PATH: test-results
   VRT_REPORT_PATH: vrt
   VRT_REPORT_ARTIFACT: VRT Results

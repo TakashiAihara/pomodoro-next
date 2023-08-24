@@ -15,7 +15,7 @@ permissions:
   pages: write
 
 env:
-  NODE_VERSION: 16.x
+  NODE_VERSION: 18.x
   STORYBOOK_BUILD_PATH: storybook-static
   STORYBOOK_DOCS_BRANCH: docs/storybook
   TEMP_DIR: tmp
