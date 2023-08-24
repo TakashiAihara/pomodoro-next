@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
@@ -68,132 +70,68 @@ const convertToStr = (milliseconds) => {
   return `${paddedMinutes}:${paddedSeconds}`;
 };
 
-it("Basic Pomodoro scenario with default settings", () => {
-  vi.useFakeTimers();
-  render(<App />);
-
-  // *** 1st Pomodoro ***
-  // Confirm current settings
-  let remainingMillSec = DEFAULT_MILL_SECS.POMO;
-  expect(screen.getByLabelText(CONTROL_RADIO_BUTTONS.POMO)).toBeChecked();
+const confirmCheckedControl = (controlLabelText) => {
+  expect(screen.getByLabelText(controlLabelText)).toBeChecked();
+};
+const confirmCurrentTime = (remainingMillSec) => {
   expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
+};
 
-  // Start the pomodoro timer
-  fireEvent.click(screen.getByText(TIMER_BUTTONS.START));
+const confirmCurrentSettings = (remainingMillSec, controlLabelText) => {
+  confirmCheckedControl(controlLabelText);
+  confirmCurrentTime(remainingMillSec);
+};
 
-  // Confirm the timer is running
-  vi.advanceTimersByTime(1000 * 5);
-  remainingMillSec = remainingMillSec - 1000 * 5;
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
+const startTimerWithClickTimer = (remainingMillSec) => {
+  fireEvent.click(screen.getByText(convertToStr(remainingMillSec))); // Click on the timer to start
+};
 
-  // Stop the timer temporarily
-  vi.advanceTimersByTime(1000 * 60);
-  remainingMillSec = remainingMillSec - 1000 * 60;
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
+const pauseTimer = () => {
   fireEvent.click(screen.getByText(TIMER_BUTTONS.PAUSE));
+};
 
-  // Confirm the timer is paused
-  vi.advanceTimersByTime(1000 * 120);
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Resume the timer
+const resumeTimer = () => {
   fireEvent.click(screen.getByText(TIMER_BUTTONS.RESUME));
+};
 
-  // Confirm the timer is running
+const confirmTimerRunning = (remainingMillSec) => {
   vi.advanceTimersByTime(1000 * 5);
   remainingMillSec = remainingMillSec - 1000 * 5;
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
+  confirmCurrentTime(remainingMillSec);
+  return remainingMillSec;
+};
 
-  // Timer is finished, realized sound, confirm the message
+const confirmTimerPaused = (remainingMillSec) => {
+  vi.advanceTimersByTime(1000 * 120);
+  confirmCurrentTime(remainingMillSec);
+};
+
+const waitEnd = (remainingMillSec) => {
   vi.advanceTimersByTime(remainingMillSec);
+};
+
+const confirmTimerEnd = (expectMessage) => {
   expect(mocks.mockSound).toHaveBeenCalled();
-  expect(screen.getByText(TIME_UP_MESSAGES.BREAK)).toBeInTheDocument();
+  expect(screen.getByText(expectMessage)).toBeInTheDocument();
+};
 
-  // *** Short Break ***
-  // Change to short break
-  fireEvent.click(screen.getByLabelText(CONTROL_RADIO_BUTTONS.SHORT));
+const switchControl = (controlButton) => {
+  fireEvent.click(screen.getByLabelText(controlButton));
+};
 
-  // Confirm current settings
-  remainingMillSec = DEFAULT_MILL_SECS.SHORT;
-  expect(screen.getByLabelText(CONTROL_RADIO_BUTTONS.SHORT)).toBeChecked();
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Start the pomodoro timer
-  // fireEvent.click(screen.getByText(TIMER_BUTTONS.START)); TODO: fix
-  fireEvent.click(screen.getByText(convertToStr(remainingMillSec))); // Click on the timer to start
-
-  // Confirm the timer is running
-  vi.advanceTimersByTime(1000 * 5);
-  remainingMillSec = remainingMillSec - 1000 * 5;
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Timer is finished, realized sound, confirm the message
-  vi.advanceTimersByTime(remainingMillSec);
-  expect(mocks.mockSound).toHaveBeenCalled();
-  expect(screen.getByText(TIME_UP_MESSAGES.WORK)).toBeInTheDocument();
-
-  // *** 2st Pomodoro ***
-  // Change to long break
-  fireEvent.click(screen.getByLabelText(CONTROL_RADIO_BUTTONS.POMO));
-
-  // Confirm current settings
-  remainingMillSec = DEFAULT_MILL_SECS.POMO;
-  expect(screen.getByLabelText(CONTROL_RADIO_BUTTONS.POMO)).toBeChecked();
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Start the pomodoro timer
-  // fireEvent.click(screen.getByText(TIMER_BUTTONS.START));
-  fireEvent.click(screen.getByText(convertToStr(remainingMillSec))); // Click on the timer to start
-
-  // Confirm the timer is running
-  vi.advanceTimersByTime(1000 * 5);
-  remainingMillSec = remainingMillSec - 1000 * 5;
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Timer is finished, realized sound, confirm the message
-  vi.advanceTimersByTime(remainingMillSec);
-  expect(mocks.mockSound).toHaveBeenCalled();
-  expect(screen.getByText(TIME_UP_MESSAGES.BREAK)).toBeInTheDocument();
-
-  // *** Long Break ***
-  // Change to long break
-  fireEvent.click(screen.getByLabelText(CONTROL_RADIO_BUTTONS.LONG));
-
-  // Confirm current settings
-  remainingMillSec = DEFAULT_MILL_SECS.LONG;
-  expect(screen.getByLabelText(CONTROL_RADIO_BUTTONS.LONG)).toBeChecked();
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Start the pomodoro timer
-  // fireEvent.click(screen.getByText(TIMER_BUTTONS.START)); TODO: fix
-  fireEvent.click(screen.getByText(convertToStr(remainingMillSec))); // Click on the timer to start
-
-  // Confirm the timer is running
-  vi.advanceTimersByTime(1000 * 5);
-  remainingMillSec = remainingMillSec - 1000 * 5;
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Timer is finished, realized sound, confirm the message
-  vi.advanceTimersByTime(remainingMillSec);
-  expect(mocks.mockSound).toHaveBeenCalled();
-  expect(screen.getByText(TIME_UP_MESSAGES.WORK)).toBeInTheDocument();
-});
-
-it("Basic Pomodoro scenario with changed settings", () => {
-  vi.useFakeTimers();
-  render(<App />);
-
-  // Open setting
+const openSettings = () => {
   fireEvent.click(screen.getByTitle(SETTINGS_PANE_BUTTON_TITLE));
   expect(screen.getByText(SETTINGS_PANE_TEXT)).toBeInTheDocument();
+};
 
+const changeAllTimer = (pomoLength, shortLength, longLength) => {
   // Change all timer
   fireEvent.input(
     screen.getByLabelText("pomodoro", {
       selector: "input[type=number]",
     }),
     {
-      target: { value: CHANGED_MINUTES.POMO },
+      target: { value: pomoLength },
     },
   );
   fireEvent.input(
@@ -201,7 +139,7 @@ it("Basic Pomodoro scenario with changed settings", () => {
       selector: "input[type=number]",
     }),
     {
-      target: { value: CHANGED_MINUTES.SHORT },
+      target: { value: shortLength },
     },
   );
   fireEvent.input(
@@ -209,114 +147,105 @@ it("Basic Pomodoro scenario with changed settings", () => {
       selector: "input[type=number]",
     }),
     {
-      target: { value: CHANGED_MINUTES.LONG },
+      target: { value: longLength },
     },
   );
   fireEvent.click(screen.getByText("Apply"));
+};
+
+it("Basic Pomodoro scenario with default settings", () => {
+  vi.useFakeTimers();
+  render(<App />);
+  let remainingMillSec = 0;
 
   // *** 1st Pomodoro ***
-  // Confirm current settings
-  let remainingMillSec = CHANGED_MILL_SECS.POMO;
-  expect(screen.getByLabelText(CONTROL_RADIO_BUTTONS.POMO)).toBeChecked();
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Start the pomodoro timer
-  fireEvent.click(screen.getByText(TIMER_BUTTONS.START));
-
-  // Confirm the timer is running
-  vi.advanceTimersByTime(1000 * 5);
-  remainingMillSec = remainingMillSec - 1000 * 5;
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Stop the timer temporarily
-  vi.advanceTimersByTime(1000 * 60);
-  remainingMillSec = remainingMillSec - 1000 * 60;
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-  fireEvent.click(screen.getByText(TIMER_BUTTONS.PAUSE));
-
-  // Confirm the timer is paused
-  vi.advanceTimersByTime(1000 * 120);
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Resume the timer
-  fireEvent.click(screen.getByText(TIMER_BUTTONS.RESUME));
-
-  // Confirm the timer is running
-  vi.advanceTimersByTime(1000 * 5);
-  remainingMillSec = remainingMillSec - 1000 * 5;
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Timer is finished, realized sound, confirm the message
-  vi.advanceTimersByTime(remainingMillSec);
-  expect(mocks.mockSound).toHaveBeenCalled();
-  expect(screen.getByText(TIME_UP_MESSAGES.BREAK)).toBeInTheDocument();
+  remainingMillSec = DEFAULT_MILL_SECS.POMO;
+  confirmCurrentSettings(remainingMillSec, CONTROL_RADIO_BUTTONS.POMO);
+  startTimerWithClickTimer(remainingMillSec);
+  remainingMillSec = confirmTimerRunning(remainingMillSec);
+  pauseTimer();
+  confirmTimerPaused(remainingMillSec);
+  resumeTimer();
+  remainingMillSec = confirmTimerRunning(remainingMillSec);
+  waitEnd(remainingMillSec);
+  confirmTimerEnd(TIME_UP_MESSAGES.BREAK);
 
   // *** Short Break ***
-  // Change to short break
-  fireEvent.click(screen.getByLabelText(CONTROL_RADIO_BUTTONS.SHORT));
-
-  // Confirm current settings
-  remainingMillSec = CHANGED_MILL_SECS.SHORT;
-  expect(screen.getByLabelText(CONTROL_RADIO_BUTTONS.SHORT)).toBeChecked();
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Start the pomodoro timer
-  // fireEvent.click(screen.getByText(TIMER_BUTTONS.START)); TODO: fix
-  fireEvent.click(screen.getByText(convertToStr(remainingMillSec))); // Click on the timer to start
-
-  // Confirm the timer is running
-  vi.advanceTimersByTime(1000 * 5);
-  remainingMillSec = remainingMillSec - 1000 * 5;
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Timer is finished, realized sound, confirm the message
-  vi.advanceTimersByTime(remainingMillSec);
-  expect(mocks.mockSound).toHaveBeenCalled();
-  expect(screen.getByText(TIME_UP_MESSAGES.WORK)).toBeInTheDocument();
+  remainingMillSec = DEFAULT_MILL_SECS.SHORT;
+  switchControl(CONTROL_RADIO_BUTTONS.SHORT);
+  confirmCurrentSettings(remainingMillSec, CONTROL_RADIO_BUTTONS.SHORT);
+  startTimerWithClickTimer(remainingMillSec);
+  remainingMillSec = confirmTimerRunning(remainingMillSec);
+  waitEnd(remainingMillSec);
+  confirmTimerEnd(TIME_UP_MESSAGES.WORK);
 
   // *** 2st Pomodoro ***
-  // Change to long break
-  fireEvent.click(screen.getByLabelText(CONTROL_RADIO_BUTTONS.POMO));
-
-  // Confirm current settings
-  remainingMillSec = CHANGED_MILL_SECS.POMO;
-  expect(screen.getByLabelText(CONTROL_RADIO_BUTTONS.POMO)).toBeChecked();
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Start the pomodoro timer
-  // fireEvent.click(screen.getByText(TIMER_BUTTONS.START));
-  fireEvent.click(screen.getByText(convertToStr(remainingMillSec))); // Click on the timer to start
-
-  // Confirm the timer is running
-  vi.advanceTimersByTime(1000 * 5);
-  remainingMillSec = remainingMillSec - 1000 * 5;
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Timer is finished, realized sound, confirm the message
-  vi.advanceTimersByTime(remainingMillSec);
-  expect(mocks.mockSound).toHaveBeenCalled();
-  expect(screen.getByText(TIME_UP_MESSAGES.BREAK)).toBeInTheDocument();
+  remainingMillSec = DEFAULT_MILL_SECS.POMO;
+  switchControl(CONTROL_RADIO_BUTTONS.POMO);
+  confirmCurrentSettings(remainingMillSec, CONTROL_RADIO_BUTTONS.POMO);
+  startTimerWithClickTimer(remainingMillSec);
+  remainingMillSec = confirmTimerRunning(remainingMillSec);
+  waitEnd(remainingMillSec);
+  confirmTimerEnd(TIME_UP_MESSAGES.BREAK);
 
   // *** Long Break ***
-  // Change to long break
-  fireEvent.click(screen.getByLabelText(CONTROL_RADIO_BUTTONS.LONG));
+  remainingMillSec = DEFAULT_MILL_SECS.LONG;
+  switchControl(CONTROL_RADIO_BUTTONS.LONG);
+  confirmCurrentSettings(remainingMillSec, CONTROL_RADIO_BUTTONS.LONG);
+  startTimerWithClickTimer(remainingMillSec);
+  remainingMillSec = confirmTimerRunning(remainingMillSec);
+  waitEnd(remainingMillSec);
+  confirmTimerEnd(TIME_UP_MESSAGES.WORK);
+});
 
-  // Confirm current settings
+it("Basic Pomodoro scenario with changed settings", () => {
+  vi.useFakeTimers();
+  render(<App />);
+  let remainingMillSec = 0;
+
+  openSettings();
+  changeAllTimer(
+    CHANGED_MINUTES.POMO,
+    CHANGED_MINUTES.SHORT,
+    CHANGED_MINUTES.LONG,
+  );
+
+  // *** 1st Pomodoro ***
+  remainingMillSec = CHANGED_MILL_SECS.POMO;
+  confirmCurrentSettings(remainingMillSec, CONTROL_RADIO_BUTTONS.POMO);
+  startTimerWithClickTimer(remainingMillSec);
+  remainingMillSec = confirmTimerRunning(remainingMillSec);
+  pauseTimer();
+  confirmTimerPaused(remainingMillSec);
+  resumeTimer();
+  remainingMillSec = confirmTimerRunning(remainingMillSec);
+  waitEnd(remainingMillSec);
+  confirmTimerEnd(TIME_UP_MESSAGES.BREAK);
+
+  // *** Short Break ***
+  remainingMillSec = CHANGED_MILL_SECS.SHORT;
+  switchControl(CONTROL_RADIO_BUTTONS.SHORT);
+  confirmCurrentSettings(remainingMillSec, CONTROL_RADIO_BUTTONS.SHORT);
+  startTimerWithClickTimer(remainingMillSec);
+  remainingMillSec = confirmTimerRunning(remainingMillSec);
+  waitEnd(remainingMillSec);
+  confirmTimerEnd(TIME_UP_MESSAGES.WORK);
+
+  // *** 2st Pomodoro ***
+  remainingMillSec = CHANGED_MILL_SECS.POMO;
+  switchControl(CONTROL_RADIO_BUTTONS.POMO);
+  confirmCurrentSettings(remainingMillSec, CONTROL_RADIO_BUTTONS.POMO);
+  startTimerWithClickTimer(remainingMillSec);
+  remainingMillSec = confirmTimerRunning(remainingMillSec);
+  waitEnd(remainingMillSec);
+  confirmTimerEnd(TIME_UP_MESSAGES.BREAK);
+
+  // *** Long Break ***
   remainingMillSec = CHANGED_MILL_SECS.LONG;
-  expect(screen.getByLabelText(CONTROL_RADIO_BUTTONS.LONG)).toBeChecked();
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Start the pomodoro timer
-  // fireEvent.click(screen.getByText(TIMER_BUTTONS.START)); TODO: fix
-  fireEvent.click(screen.getByText(convertToStr(remainingMillSec))); // Click on the timer to start
-
-  // Confirm the timer is running
-  vi.advanceTimersByTime(1000 * 5);
-  remainingMillSec = remainingMillSec - 1000 * 5;
-  expect(screen.getByText(convertToStr(remainingMillSec))).toBeInTheDocument();
-
-  // Timer is finished, realized sound, confirm the message
-  vi.advanceTimersByTime(remainingMillSec);
-  expect(mocks.mockSound).toHaveBeenCalled();
-  expect(screen.getByText(TIME_UP_MESSAGES.WORK)).toBeInTheDocument();
+  switchControl(CONTROL_RADIO_BUTTONS.LONG);
+  confirmCurrentSettings(remainingMillSec, CONTROL_RADIO_BUTTONS.LONG);
+  startTimerWithClickTimer(remainingMillSec);
+  remainingMillSec = confirmTimerRunning(remainingMillSec);
+  waitEnd(remainingMillSec);
+  confirmTimerEnd(TIME_UP_MESSAGES.WORK);
 });
