@@ -52,8 +52,8 @@ const ciConfig: PlaywrightTestConfig = {
   outputDir: "./test-results/e2e/execute",
   fullyParallel: true,
   forbidOnly: true,
-  retries: 2,
-  workers: 1,
+  retries: 1,
+  workers: 2,
   webServer: {
     command: "BROWSER=none npm run start",
     url: "http://localhost:3000",
@@ -67,9 +67,11 @@ const ciConfig: PlaywrightTestConfig = {
   ],
   use: {
     headless: true,
-    screenshot: "only-on-failure",
-    video: "retry-with-video",
-    trace: "on-first-retry",
+    screenshot: "on",
+    video: "on",
+    trace: "on",
+    navigationTimeout: 3000,
+    actionTimeout: 3000,
   },
   projects: [
     {
