@@ -114,11 +114,6 @@ jobs:
       - name: checkout current branch
         uses: actions/checkout@v3
 
-      - if: ${{ github.event_name == 'pull_request' }}
-        name: workaround for detached HEAD
-        run: |
-          git checkout ${GITHUB_HEAD_REF#refs/heads/} || git checkout -b ${GITHUB_HEAD_REF#refs/heads/} && git pull
-
       - name: restore npm cache
         uses: actions/cache@v3
         with:
@@ -165,11 +160,6 @@ jobs:
 
       - name: checkout current branch
         uses: actions/checkout@v3
-
-      - if: ${{ github.event_name == 'pull_request' }}
-        name: workaround for detached HEAD
-        run: |
-          git checkout ${GITHUB_HEAD_REF#refs/heads/} || git checkout -b ${GITHUB_HEAD_REF#refs/heads/} && git pull
 
       - name: restore npm cache
         uses: actions/cache@v3
