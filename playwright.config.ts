@@ -49,7 +49,7 @@ const defaultConfig: PlaywrightTestConfig = {
 
 const ciConfig: PlaywrightTestConfig = {
   testDir: `./test/e2e`,
-  outputDir: "./test-results/e2e/execute",
+  outputDir: "./__e2e__/",
   fullyParallel: true,
   forbidOnly: true,
   retries: 1,
@@ -62,8 +62,8 @@ const ciConfig: PlaywrightTestConfig = {
     stderr: "pipe",
   },
   reporter: [
-    ["html", { open: "never", outputFolder: "./test-results/e2e/report" }],
-    ["github", { open: "never", outputFolder: "./test-results/e2e/report" }],
+    ["html", { open: "never", outputFolder: "./test-results/e2e" }],
+    ["github", { open: "never", outputFolder: "./test-results/e2e" }],
   ],
   use: {
     headless: true,
