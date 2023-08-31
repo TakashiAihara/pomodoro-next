@@ -170,7 +170,10 @@ jobs:
       - name: npm install
         run: npm ci
 
-      - name: execute unit test with coverage
+      - name: Install playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Execute unit test with coverage
         run: npm run e2e:run
 
       - if: always()
