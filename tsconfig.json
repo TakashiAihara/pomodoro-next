@@ -19,12 +19,12 @@
     "noUncheckedIndexedAccess": true,
     "noErrorTruncation": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["vitest/globals"],
+    "types": ["vitest/globals"]
   },
   "baseUrl": "./",
   "paths": {
     "@/*": ["./src/*"]
   },
-  "include": ["./src/**/*", "*.ts"],
+  "include": ["./src/**/*", "./test/**/*", "*.ts"],
   "exclude": ["node_modules", "build"]
 }

@@ -1,4 +1,4 @@
-name: storybook - Build and Deploy
+name: Build and Deploy - storybook
 on:
   push:
     branches:
@@ -27,12 +27,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: checkout latest main branch
+      - name: Checkout latest main branch
         uses: actions/checkout@v3
 
       - name: npm install
@@ -42,7 +42,7 @@ jobs:
         run: npm run storybook-build
 
       - uses: actions/upload-pages-artifact@v2
-        name: Upload Pages Artifact
+        name: Upload pages artifact
         with:
           name: Storybook
           path: ${{ env.STORYBOOK_BUILD_PATH }}
@@ -54,13 +54,13 @@ jobs:
           publish_dir: ${{ env.STORYBOOK_BUILD_PATH }}
           publish_branch: ${{ env.STORYBOOK_DOCS_BRANCH }}
 
-      - name: create dir for gh-pages
+      - name: Create dir for gh-pages
         run: |
           mkdir -p ${TEMP_DIR}
           mv ${STORYBOOK_BUILD_PATH} ${TEMP_DIR}/${GH_PAGES_STORYBOOK_SUBDIR}
 
       - uses: actions/upload-pages-artifact@v2
-        name: Upload Pages Artifact
+        name: Upload pages artifact
         with:
           name: Github Pages
           path: ${{ env.TEMP_DIR }}

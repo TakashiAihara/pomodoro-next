@@ -49,3 +49,9 @@ __screenshots__
 
 ## unplugin-auto-import
 auto-imports.d.ts
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+__e2e__/

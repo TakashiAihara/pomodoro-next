@@ -1,4 +1,4 @@
-name: storycap - Generate and Deploy
+name: Generate and Deploy - storycap
 on:
   push:
     branches:
@@ -20,12 +20,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: checkout latest main branch
+      - name: Checkout latest main branch
         uses: actions/checkout@v3
 
       - name: npm install
