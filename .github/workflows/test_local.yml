@@ -180,7 +180,7 @@ jobs:
       - name: Install playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Execute unit test with coverage
+      - name: Execute E2E test
         run: npx playwright test --shard=${{ matrix.shard }}
 
       - name: Upload blob report to GitHub Actions Artifacts
@@ -262,7 +262,7 @@ jobs:
           path: ${{ env.TEST_REPORTS_PATH }}/${{ env.UNIT_TEST_PATH }}
           key: unit-${{ runner.os }}-${{ github.run_id }}
 
-      - name: Load e2e test report cache
+      - name: Load E2E test report cache
         uses: actions/cache@v3
         id: load-cache-e2e-test-report
         with:
