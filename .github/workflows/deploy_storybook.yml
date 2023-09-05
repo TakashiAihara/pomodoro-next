@@ -1,4 +1,4 @@
-name: storybook - Build and Deploy
+name: Build and Deploy - storybook
 on:
   push:
     branches:
@@ -16,7 +16,6 @@ permissions:
 
 env:
   NODE_VERSION: 18.x
-  PNPM_VERSION: 8
   STORYBOOK_BUILD_PATH: storybook-static
   STORYBOOK_DOCS_BRANCH: docs/storybook
   TEMP_DIR: tmp
@@ -31,7 +30,7 @@ jobs:
       - name: checkout current branch
         uses: actions/checkout@v3
 
-      - name: setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -43,17 +42,14 @@ jobs:
           run_install: false
 
       - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - uses: actions/cache@v3
         name: Setup pnpm cache
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
         run: pnpm i --frozen-lockfile
@@ -62,7 +58,7 @@ jobs:
         run: pnpm storybook-build
 
       - uses: actions/upload-pages-artifact@v2
-        name: Upload Pages Artifact
+        name: Upload pages artifact
         with:
           name: Storybook
           path: ${{ env.STORYBOOK_BUILD_PATH }}
@@ -74,13 +70,13 @@ jobs:
           publish_dir: ${{ env.STORYBOOK_BUILD_PATH }}
           publish_branch: ${{ env.STORYBOOK_DOCS_BRANCH }}
 
-      - name: create dir for gh-pages
+      - name: Create dir for gh-pages
         run: |
           mkdir -p ${TEMP_DIR}
           mv ${STORYBOOK_BUILD_PATH} ${TEMP_DIR}/${GH_PAGES_STORYBOOK_SUBDIR}
 
       - uses: actions/upload-pages-artifact@v2
-        name: Upload Pages Artifact
+        name: Upload pages artifact
         with:
           name: Github Pages
           path: ${{ env.TEMP_DIR }}

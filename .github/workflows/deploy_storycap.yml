@@ -1,4 +1,4 @@
-name: storycap - Generate and Deploy
+name: Generate and Deploy - storycap
 on:
   push:
     branches:
@@ -24,8 +24,10 @@ jobs:
       - name: checkout current branch
         uses: actions/checkout@v3
 
-      - name: setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
       - uses: pnpm/action-setup@v2
         name: Install pnpm
@@ -34,17 +36,14 @@ jobs:
           run_install: false
 
       - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - uses: actions/cache@v3
         name: Setup pnpm cache
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
         run: pnpm i --frozen-lockfile

@@ -1,0 +1,365 @@
+name: Execute Tests in Local (VRT/Unit/E2E)
+
+on:
+  push:
+    branches:
+      - ci/**
+  pull_request:
+    branches-ignore:
+      - ci/**
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  pull-requests: write
+  pages: write
+  id-token: write
+
+env:
+  TEST_REPORTS_PATH: test-results
+  VRT_REPORT_PATH: vrt
+  VRT_REPORT_ARTIFACT: VRT Results
+  VRT_REPORT_ARTIFACT_MAIN: VRT Resources From Main
+  UNIT_TEST_PATH: unit
+  UNIT_TEST_ARTIFACT: Unit Test Results
+  E2E_TEST_PATH: e2e
+  E2E_TEST_BLOB_PATH: e2e_blob
+  E2E_TEST_ARTIFACT: E2E Test Results
+  GITHUB_PAGES_ARTIFACT: Github Pages
+  STORYBOOK_DOCS_BRANCH: docs/storybook
+  STORYBOOK_SUBDIR: storybook
+  STORYCAP_DOCS_BRANCH: docs/storycap
+
+jobs:
+  vrt:
+    name: Execute VRT
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: .nvmrc
+
+      - name: Setup package manager
+        run: corepack enable pnpm
+
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Restore pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        uses: pnpm/action-setup@v2
+        with:
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile, --strict-peer-dependencies]
+
+      - name: Checkout latest storycap from ${{ env.STORYCAP_DOCS_BRANCH }}
+        id: checkout_latest_storycap
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.STORYCAP_DOCS_BRANCH }}
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.VRT_REPORT_PATH }}/expected
+        continue-on-error: true
+
+      - if: steps.checkout_latest_storycap.outcome != 'success'
+        name: Failed to checkout latest storycap from ${{ env.STORYCAP_DOCS_BRANCH }}
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: Failed to checkout latest storycap from ${{ env.STORYCAP_DOCS_BRANCH }}.
+          mode: delete
+          reactions: confused
+
+      - if: steps.checkout_latest_storycap.outcome != 'success'
+        run: exit 1
+
+      - name: Capture current branch
+        run: pnpm vrt:capture
+
+      - name: Run vrt
+        run: pnpm vrt:run
+
+      - if: always()
+        uses: actions/upload-artifact@v3
+        name: Upload pages artifact
+        with:
+          name: ${{ env.VRT_REPORT_ARTIFACT }}
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.VRT_REPORT_PATH }}
+
+      - if: always()
+        name: Cache VRT report
+        uses: actions/cache@v3
+        id: cache-vrt-report
+        with:
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.VRT_REPORT_PATH }}
+          key: vrt-${{ runner.os }}-${{ github.run_id }}
+
+  unit:
+    name: Execute Unit Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: .nvmrc
+
+      - name: Setup package manager
+        run: corepack enable pnpm
+
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Restore pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        uses: pnpm/action-setup@v2
+        with:
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile, --strict-peer-dependencies]
+
+      - name: Execute unit test with coverage
+        run: pnpm ut:coverage
+
+      - if: always()
+        name: Report coverage into PR
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          file-coverage-mode: all
+          json-final-path: ${{ env.TEST_REPORTS_PATH }}/${{ env.UNIT_TEST_PATH }}/coverage-final.json
+          json-summary-path: ${{ env.TEST_REPORTS_PATH }}/${{ env.UNIT_TEST_PATH }}/coverage-summary.json
+
+      - if: always()
+        uses: actions/upload-artifact@v3
+        name: Upload pages artifact
+        with:
+          name: ${{ env.UNIT_TEST_ARTIFACT }}
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.UNIT_TEST_PATH }}
+
+      - if: always()
+        name: Cache unit test report
+        uses: actions/cache@v3
+        id: cache-unit-test-report
+        with:
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.UNIT_TEST_PATH }}
+          key: unit-${{ runner.os }}-${{ github.run_id }}
+
+  e2e:
+    name: Execute E2E Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1/5, 2/5, 3/5, 4/5, 5/5]
+
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: .nvmrc
+
+      - name: Setup package manager
+        run: corepack enable pnpm
+
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Restore pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+
+      - name: Get playwright version
+        run: echo "PLAYWRIGHT_VERSION=$(pnpm ls @playwright/test | grep @playwright | cut -d " " -f 2)" >> $GITHUB_ENV
+
+      - name: Restore playwright browsers cache
+        uses: actions/cache@v3
+        id: cache-playwright-browsers
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Install dependencies
+        uses: pnpm/action-setup@v2
+        with:
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile, --strict-peer-dependencies]
+
+      - name: Install playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Execute E2E test
+        run: pnpm exec playwright test --shard=${{ matrix.shard }}
+
+      - name: Upload blob report to GitHub Actions Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: all-blob-reports
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.E2E_TEST_BLOB_PATH }}
+          retention-days: 1
+
+  merge-reports:
+    if: always()
+    needs:
+      - e2e
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm ci
+
+      - name: Download blob reports from GitHub Actions Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: all-blob-reports
+          path: all-blob-reports
+
+      - name: Merge into HTML report
+        run: npx playwright merge-reports -c playwright.merge.ts ./all-blob-reports
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v3
+        with:
+          name: Playwright HTML Report Attempt-${{ github.run_attempt }}
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.E2E_TEST_PATH }}
+          retention-days: 14
+
+      - name: Cache E2E test report
+        uses: actions/cache@v3
+        id: cache-e2e-test-report
+        with:
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.E2E_TEST_PATH }}
+          key: e2e-${{ runner.os }}-${{ github.run_id }}
+
+  deploy-github-pages:
+    name: Summarize deliverables and deploy github pages
+    runs-on: ubuntu-latest
+    needs:
+      - vrt
+      - unit
+      - e2e
+      - merge-reports
+    if: >
+      always() &&
+      (
+        needs.vrt.result == 'success' ||
+        needs.unit.result == 'success' ||
+        needs.e2e.result == 'success'
+      )
+
+    steps:
+      - name: Load VRT report cache
+        uses: actions/cache@v3
+        id: load-cache-vrt-report
+        with:
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.VRT_REPORT_PATH }}
+          key: vrt-${{ runner.os }}-${{ github.run_id }}
+
+      - name: Load unit test report cache
+        uses: actions/cache@v3
+        id: load-cache-unit-test-report
+        with:
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.UNIT_TEST_PATH }}
+          key: unit-${{ runner.os }}-${{ github.run_id }}
+
+      - name: Load E2E test report cache
+        uses: actions/cache@v3
+        id: load-cache-e2e-test-report
+        with:
+          path: ${{ env.TEST_REPORTS_PATH }}/${{ env.E2E_TEST_PATH }}
+          key: e2e-${{ runner.os }}-${{ github.run_id }}
+
+      - name: Checkout ${{ env.STORYBOOK_DOCS_BRANCH }} for deploy with ${{ env.TEST_REPORTS_PATH }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.STORYBOOK_DOCS_BRANCH }}
+          path: ${{ env.STORYBOOK_SUBDIR }}
+
+      - uses: actions/upload-pages-artifact@v2
+        name: Upload pages artifact
+        with:
+          name: ${{ env.GITHUB_PAGES_ARTIFACT }}
+          path: .
+
+      - uses: actions/deploy-pages@v2
+        id: deployment
+        with:
+          artifact_name: ${{ env.GITHUB_PAGES_ARTIFACT }}
+
+      - name: Checkout CNAME
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          clean: true
+
+      - name: Get gitHub pages custom domain
+        run: |
+          echo "CNAME=$(cat CNAME)" >> $GITHUB_ENV
+
+      - if: >
+          github.event_name != 'push' &&
+          steps.load-cache-vrt-report.outputs.cache-hit == 'true'
+        name: PR comment with VRT result link
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            VRT Report is available at
+            https://${{ env.CNAME }}/${{ env.TEST_REPORTS_PATH }}/${{ env.VRT_REPORT_PATH }}
+            Please check it if failed!! 😁
+          mode: delete
+
+      - if: >
+          github.event_name != 'push' &&
+          steps.load-cache-unit-test-report.outputs.cache-hit == 'true'
+        name: PR comment with unit test result link
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            Unit Test Report is available at
+            https://${{ env.CNAME }}/${{ env.TEST_REPORTS_PATH }}/${{ env.UNIT_TEST_PATH }}
+          mode: delete
+
+      - if: >
+          github.event_name != 'push' &&
+          steps.load-cache-e2e-test-report.outputs.cache-hit == 'true'
+        name: PR comment with e2e test result link
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            E2E Test Report is available at
+            https://${{ env.CNAME }}/${{ env.TEST_REPORTS_PATH }}/${{ env.E2E_TEST_PATH }}
+          mode: delete

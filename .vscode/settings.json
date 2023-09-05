@@ -53,5 +53,9 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "prettier.enable": true,
-  "prettier.embeddedLanguageFormatting": "auto"
+  "prettier.embeddedLanguageFormatting": "auto",
+  "sonarlint.connectedMode.project": {
+    "connectionId": "TakashiAihara",
+    "projectKey": "TakashiAihara_pomodoro-next"
+  }
 }
