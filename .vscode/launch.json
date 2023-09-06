@@ -8,10 +8,8 @@
       "name": "Launch Program",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run start",
-      "skipFiles": [
-        "<node_internals>/**"
-      ]
+      "command": "pnpm start",
+      "skipFiles": ["<node_internals>/**"]
     }
   ]
 }

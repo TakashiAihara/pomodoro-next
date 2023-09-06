@@ -6,7 +6,7 @@
     "build": "react-scripts build",
     "e2e:run": "playwright test",
     "eject": "react-scripts eject",
-    "fix": "npm run format && npm run lint:fix",
+    "fix": "pnpm format && pnpm lint:fix",
     "format": "prettier --write 'src/**/*.{ts,tsx}'",
     "lint:fix": "eslint --fix 'src/**/*.{ts,tsx}'",
     "prepare": "husky install",
@@ -14,12 +14,12 @@
     "storybook": "storybook dev -p 6006",
     "storybook-build": "storybook build",
     "storybook-ci": "storybook dev -p 6006 --ci",
-    "test": "npm run ut:coverage",
+    "test": "pnpm ut:coverage",
     "ut:coverage": "vitest run --coverage",
     "ut:run": "vitest run",
     "ut:watch": "vitest",
-    "vrt:capture": "npx storycap --serverCmd 'npm run storybook-ci' http://localhost:6006",
-    "vrt:capture-verbose": "npm run vrt:capture -- --verbose",
+    "vrt:capture": "storycap --serverCmd 'pnpm storybook-ci' http://localhost:6006",
+    "vrt:capture-verbose": "pnpm vrt:capture -- --verbose",
     "vrt:compare": "reg-suit compare",
     "vrt:run": "reg-suit run"
   },
@@ -103,7 +103,7 @@
     "vitest": "^0.34.1",
     "webpack": "^5.88.2"
   },
-  "packageManager": "npm@9.6.7",
+  "packageManager": "pnpm@8.7.1",
   "engines": {
     "node": "18.x"
   }

@@ -18,7 +18,6 @@ permissions:
   id-token: write
 
 env:
-  NODE_VERSION: 18.x
   TEST_REPORTS_PATH: test-results
   VRT_REPORT_PATH: vrt
   VRT_REPORT_ARTIFACT: VRT Results
@@ -38,29 +37,42 @@ jobs:
     name: Execute VRT
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
       - name: Checkout current branch
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - if: ${{ github.event_name == 'pull_request' }}
-        name: Workaround for detached HEAD
-        run: |
-          git checkout ${GITHUB_HEAD_REF#refs/heads/} || git checkout -b ${GITHUB_HEAD_REF#refs/heads/} && git pull
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: .nvmrc
 
-      - name: Restore npm cache
+      - name: Setup package manager
+        run: corepack enable pnpm
+
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Restore pnpm cache
         uses: actions/cache@v3
         with:
-          path: ~/.npm
-          key: npm-${{ hashFiles('**/package-lock.json') }}
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
-      - name: npm install
-        run: npm ci
+      - name: Install dependencies
+        uses: pnpm/action-setup@v2
+        with:
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile, --strict-peer-dependencies]
+
+      - name: Workaround for detached HEAD
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          git checkout ${GITHUB_HEAD_REF#refs/heads/} || \
+          git checkout -b ${GITHUB_HEAD_REF#refs/heads/} && \
+          git pull
 
       - name: Checkout latest storycap from ${{ env.STORYCAP_DOCS_BRANCH }}
         id: checkout_latest_storycap
@@ -74,8 +86,7 @@ jobs:
         name: Failed to checkout latest storycap from ${{ env.STORYCAP_DOCS_BRANCH }}
         uses: thollander/actions-comment-pull-request@v2
         with:
-          message: |
-            Failed to checkout latest storycap from ${{ env.STORYCAP_DOCS_BRANCH }}.
+          message: Failed to checkout latest storycap from ${{ env.STORYCAP_DOCS_BRANCH }}.
           mode: delete
           reactions: confused
 
@@ -83,10 +94,10 @@ jobs:
         run: exit 1
 
       - name: Capture current branch
-        run: npm run vrt:capture
+        run: pnpm vrt:capture
 
       - name: Run vrt
-        run: npm run vrt:run
+        run: pnpm vrt:run
 
       - if: always()
         uses: actions/upload-artifact@v3
@@ -107,25 +118,36 @@ jobs:
     name: Execute Unit Test
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
       - name: Checkout current branch
         uses: actions/checkout@v3
 
-      - name: Restore npm cache
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: .nvmrc
+
+      - name: Setup package manager
+        run: corepack enable pnpm
+
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Restore pnpm cache
         uses: actions/cache@v3
         with:
-          path: ~/.npm
-          key: npm-${{ hashFiles('**/package-lock.json') }}
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
-      - name: npm install
-        run: npm ci
+      - name: Install dependencies
+        uses: pnpm/action-setup@v2
+        with:
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile, --strict-peer-dependencies]
 
       - name: Execute unit test with coverage
-        run: npm run ut:coverage
+        run: pnpm ut:coverage
 
       - if: always()
         name: Report coverage into PR
@@ -160,28 +182,49 @@ jobs:
         shard: [1/5, 2/5, 3/5, 4/5, 5/5]
 
     steps:
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
       - name: Checkout current branch
         uses: actions/checkout@v3
 
-      - name: Restore npm cache
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: .nvmrc
+
+      - name: Setup package manager
+        run: corepack enable pnpm
+
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Restore pnpm cache
         uses: actions/cache@v3
         with:
-          path: ~/.npm
-          key: npm-${{ hashFiles('**/package-lock.json') }}
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
-      - name: npm install
-        run: npm ci
+      - name: Get playwright version
+        run: echo "PLAYWRIGHT_VERSION=$(pnpm ls @playwright/test | grep @playwright | cut -d " " -f 2)" >> $GITHUB_ENV
+
+      - name: Restore playwright browsers cache
+        uses: actions/cache@v3
+        id: cache-playwright-browsers
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Install dependencies
+        uses: pnpm/action-setup@v2
+        with:
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile, --strict-peer-dependencies]
 
       - name: Install playwright browsers
-        run: npx playwright install --with-deps
+        run: pnpm exec playwright install --with-deps
 
       - name: Execute E2E test
-        run: npx playwright test --shard=${{ matrix.shard }}
+        run: pnpm exec playwright test --shard=${{ matrix.shard }}
 
       - name: Upload blob report to GitHub Actions Artifacts
         if: always()
@@ -192,6 +235,7 @@ jobs:
           retention-days: 1
 
   merge-reports:
+    name: Merge E2E blob reports into HTML report
     if: always()
     needs:
       - e2e
@@ -201,12 +245,29 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: .nvmrc
+
+      - name: Setup package manager
+        run: corepack enable pnpm
+
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Restore pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: npm ci
+        uses: pnpm/action-setup@v2
+        with:
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile, --strict-peer-dependencies]
 
       - name: Download blob reports from GitHub Actions Artifacts
         uses: actions/download-artifact@v3
@@ -215,7 +276,7 @@ jobs:
           path: all-blob-reports
 
       - name: Merge into HTML report
-        run: npx playwright merge-reports -c playwright.merge.ts ./all-blob-reports
+        run: pnpm exec playwright merge-reports -c playwright.merge.ts ./all-blob-reports
 
       - name: Upload HTML report
         uses: actions/upload-artifact@v3
@@ -281,8 +342,8 @@ jobs:
           name: ${{ env.GITHUB_PAGES_ARTIFACT }}
           path: .
 
-      - uses: actions/deploy-pages@v2
-        id: deployment
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v2
         with:
           artifact_name: ${{ env.GITHUB_PAGES_ARTIFACT }}
 

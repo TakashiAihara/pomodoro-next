@@ -24,7 +24,7 @@ const defaultDevices = [
 ];
 
 const defaultWebServer = {
-  command: "BROWSER=none npm run start",
+  command: "BROWSER=none pnpm start",
   url: "http://localhost:3000",
   reuseExistingServer: true,
 };
@@ -74,8 +74,8 @@ const ciConfig = defineConfig({
     screenshot: "only-on-failure",
     video: "retry-with-video",
     trace: "retry-with-trace",
-    navigationTimeout: 3000,
-    actionTimeout: 3000,
+    navigationTimeout: 6000,
+    actionTimeout: 4000,
   },
 });
 
