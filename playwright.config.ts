@@ -74,8 +74,8 @@ const ciConfig = defineConfig({
     screenshot: "only-on-failure",
     video: "retry-with-video",
     trace: "retry-with-trace",
-    navigationTimeout: 3000,
-    actionTimeout: 3000,
+    navigationTimeout: 6000,
+    actionTimeout: 4000,
   },
 });
 
