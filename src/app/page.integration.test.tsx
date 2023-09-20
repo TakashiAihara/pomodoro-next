@@ -9,7 +9,7 @@
 // TODO: Extract actions into functions
 import { fireEvent, render, screen } from "@testing-library/react";
 
-import App from "./App";
+import Home from "./page";
 
 const mocks = vi.hoisted(() => ({ mockSound: vi.fn() }));
 vi.mock("use-sound", () => ({ default: vi.fn(() => [mocks.mockSound]) }));
@@ -155,7 +155,7 @@ const changeAllTimer = (pomoLength, shortLength, longLength) => {
 
 it("Basic Pomodoro scenario with default settings", () => {
   vi.useFakeTimers();
-  render(<App />);
+  render(<Home />);
   let remainingMillSec = 0;
 
   // *** 1st Pomodoro ***
@@ -200,7 +200,7 @@ it("Basic Pomodoro scenario with default settings", () => {
 
 it("Basic Pomodoro scenario with changed settings", () => {
   vi.useFakeTimers();
-  render(<App />);
+  render(<Home />);
   let remainingMillSec = 0;
 
   openSettings();

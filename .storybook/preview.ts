@@ -2,7 +2,7 @@ import { type Preview } from "@storybook/react";
 import { ScreenshotOptions, withScreenshot } from "storycap";
 
 import "../src/index.css";
-import "../src/App.css";
+import "../src/global.css";
 
 export const decorators = [withScreenshot];
 

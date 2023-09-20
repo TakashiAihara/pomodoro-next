@@ -4,9 +4,10 @@ module.exports = {
     "standard-with-typescript",
     "plugin:react/recommended",
     "prettier",
+    "next/core-web-vitals",
+    "plugin:storybook/recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
-    "plugin:storybook/recommended",
   ],
   env: {
     browser: true,
