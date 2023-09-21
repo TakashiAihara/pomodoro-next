@@ -24,7 +24,7 @@ const defaultDevices = [
 ];
 
 const defaultWebServer = {
-  command: "BROWSER=none pnpm start",
+  command: "BROWSER=none pnpm dev",
   url: "http://localhost:3000",
   reuseExistingServer: true,
 };
