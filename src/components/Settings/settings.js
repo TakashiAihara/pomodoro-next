@@ -31,11 +31,11 @@ const Settings = ({
     space: `'Space Mono', monospace`,
   };
 
-  if (typeof window === "object") {
-    const styles = document.documentElement.style;
-    styles.setProperty("--font-current", fonts[event.target.font.value]);
-    styles.setProperty("--accent-color", colors[event.target.color.value]);
-  }
+  // if (typeof window === "object") {
+  //   const styles = document.documentElement.style;
+  //   styles.setProperty("--font-current", fonts[event.target.font.value]);
+  //   styles.setProperty("--accent-color", colors[event.target.color.value]);
+  // }
 
   const applySettings = (event) => {
     event.preventDefault();

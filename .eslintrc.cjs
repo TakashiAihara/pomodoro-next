@@ -2,7 +2,6 @@
 module.exports = {
   extends: [
     "standard-with-typescript",
-    "plugin:react/recommended",
     "prettier",
     "next/core-web-vitals",
     "plugin:storybook/recommended",
@@ -13,7 +12,12 @@ module.exports = {
     browser: true,
     es2021: true,
   },
-  ignorePatterns: ["**/*.js", "react-app-env.d.ts", "prettier.config.*js"],
+  ignorePatterns: [
+    "**/*.js",
+    "**/*.jsx",
+    "react-app-env.d.ts",
+    "prettier.config.*js",
+  ],
   overrides: [
     {
       env: {
@@ -32,14 +36,9 @@ module.exports = {
     requireConfigFile: false,
     project: ["./tsconfig.json"],
   },
-  plugins: ["react", "react-hooks"],
   rules: {
     "react/jsx-uses-react": "off",
     "react/react-in-jsx-scope": "off",
   },
-  settings: {
-    react: {
-      version: "detect",
-    },
-  },
+  root: true,
 };
